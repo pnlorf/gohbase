@@ -40,6 +40,7 @@ type AdminClient interface {
 	SetBalancer(sb *hrpc.SetBalancer) (bool, error)
 	// MoveRegion moves a region to a different RegionServer
 	MoveRegion(mr *hrpc.MoveRegion) error
+	GetTableDescriptors(d *hrpc.TableDescriptors) ([]*pb.TableSchema, error)
 }
 
 // NewAdminClient creates an admin HBase client.
@@ -271,6 +272,18 @@ func (c *client) ListTableNames(t *hrpc.ListTableNames) ([]*pb.TableName, error)
 	}
 
 	return res.GetTableNames(), nil
+}
+
+func (c *client) GetTableDescriptors(d *hrpc.TableDescriptors) ([]*pb.TableSchema, error) {
+	pbmsg, err := c.SendRPC(d)
+	if err != nil {
+		return nil, err
+	}
+	res, ok := pbmsg.(*pb.GetTableDescriptorsResponse)
+	if !ok {
+		return nil, errors.New("sendRPC returned not a GetTableDescriptorsResponse")
+	}
+	return res.GetTableSchema(), nil
 }
 
 func (c *client) SetBalancer(sb *hrpc.SetBalancer) (bool, error) {

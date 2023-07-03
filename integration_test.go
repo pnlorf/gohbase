@@ -2140,6 +2140,143 @@ func TestListTableNames(t *testing.T) {
 
 }
 
+func TestGetTableDescriptors(t *testing.T) {
+	// Initialize our tables
+	ac := gohbase.NewAdminClient(*host)
+	tableName_lip := "t1"
+	descriptor, err := hrpc.NewGetTableDescriptors(context.Background())
+	if err != nil {
+		log.Fatalln("Failed.")
+	}
+	tableSchemas, err := ac.GetTableDescriptors(descriptor)
+	if err != nil {
+		fmt.Println("查询表结构失败:", err)
+		return
+	}
+
+	for _, tableDescriptor := range tableSchemas {
+		fmt.Println(tableDescriptor.String())
+		fmt.Println("打印表名：", tableDescriptor.GetTableName().String())
+		if string(tableDescriptor.GetTableName().GetQualifier()) == tableName_lip {
+			fmt.Println("表名:", tableDescriptor.GetTableName().String())
+			fmt.Println("列簇:", tableDescriptor.GetColumnFamilies())
+			attrs := tableDescriptor.GetAttributes()
+			for _, attr := range attrs {
+				fmt.Println("列名:", attr.String())
+			}
+			// 可以根据需要打印其他表结构信息
+			break
+		}
+	}
+
+	//tables := []string{
+	//	table + "_MATCH1",
+	//	table + "_MATCH2",
+	//	table + "nomatch",
+	//}
+	//
+	//for _, tn := range tables {
+	//	// Since this test is called by TestMain which waits for hbase init
+	//	// there is no need to wait here.
+	//	err := CreateTable(ac, tn, []string{"cf"})
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//}
+	//
+	//defer func() {
+	//	for _, tn := range tables {
+	//		err := DeleteTable(ac, tn)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//	}
+	//}()
+	//
+	//m1 := []byte(table + "_MATCH1")
+	//m2 := []byte(table + "_MATCH2")
+	//tcases := []struct {
+	//	desc      string
+	//	regex     string
+	//	namespace string
+	//	sys       bool
+	//
+	//	match []*pb.TableName
+	//}{
+	//	{
+	//		desc:  "match all",
+	//		regex: ".*",
+	//		match: []*pb.TableName{
+	//			&pb.TableName{Qualifier: []byte(table)},
+	//			&pb.TableName{Qualifier: m1},
+	//			&pb.TableName{Qualifier: m2},
+	//			&pb.TableName{Qualifier: []byte(table + "nomatch")},
+	//		},
+	//	},
+	//	{
+	//		desc:  "match_some",
+	//		regex: ".*_MATCH.*",
+	//		match: []*pb.TableName{
+	//			&pb.TableName{Qualifier: m1},
+	//			&pb.TableName{Qualifier: m2},
+	//		},
+	//	},
+	//	{
+	//		desc: "match_none",
+	//	},
+	//	{
+	//		desc:      "match meta",
+	//		regex:     ".*meta.*",
+	//		namespace: "hbase",
+	//		sys:       true,
+	//		match: []*pb.TableName{
+	//			&pb.TableName{Qualifier: []byte("meta")},
+	//		},
+	//	},
+	//}
+	//
+	//for _, tcase := range tcases {
+	//	t.Run(tcase.desc, func(t *testing.T) {
+	//		tn, err := hrpc.NewListTableNames(
+	//			context.Background(),
+	//			hrpc.ListRegex(tcase.regex),
+	//			hrpc.ListSysTables(tcase.sys),
+	//			hrpc.ListNamespace(tcase.namespace),
+	//		)
+	//		if err != nil {
+	//			t.Fatal(err)
+	//		}
+	//
+	//		names, err := ac.ListTableNames(tn)
+	//		if err != nil {
+	//			t.Error(err)
+	//		}
+	//
+	//		// filter to have only tables that we've created
+	//		var got []*pb.TableName
+	//		for _, m := range names {
+	//			if strings.HasPrefix(string(m.Qualifier), table) ||
+	//				string(m.Namespace) == "hbase" {
+	//				got = append(got, m)
+	//			}
+	//		}
+	//
+	//		if len(got) != len(tcase.match) {
+	//			t.Errorf("expected %v, got %v", tcase.match, got)
+	//		}
+	//
+	//		for i, m := range tcase.match {
+	//			want := string(m.Qualifier)
+	//			got := string(tcase.match[i].Qualifier)
+	//			if want != got {
+	//				t.Errorf("index %d: expected: %v, got %v", i, want, got)
+	//			}
+	//		}
+	//	})
+	//}
+
+}
+
 // Test snapshot creation
 func TestSnapshot(t *testing.T) {
 	ac := gohbase.NewAdminClient(*host)
